@@ -7,6 +7,7 @@ pub struct ArticleFrontmatter {
     #[serde(rename = "type")]
     pub article_type: Option<String>,
     pub source_files: Option<Vec<String>>,
+    #[allow(dead_code)]
     pub tags: Option<Vec<String>>,
 }
 
