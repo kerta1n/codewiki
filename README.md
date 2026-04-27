@@ -66,7 +66,7 @@ cw setup claude-code   # or: cw setup codex
 #    Claude reads your codebase and compiles the wiki
 
 # 4. Open in Obsidian
-#    Point Obsidian at ~/.codewiki/ as a vault
+#    Point Obsidian at your-project/llm-docs/ as a vault
 ```
 
 That's it. From now on, every session starts with understanding and ends with updated knowledge.
@@ -75,36 +75,33 @@ That's it. From now on, every session starts with understanding and ends with up
 
 ### The Wiki
 
-Each project gets a wiki at `~/.codewiki/<project>/`:
+Each project gets a wiki at `<project>/llm-docs/`:
 
 ```
-~/.codewiki/
-├── my-project/
-│   ├── _index.md              # Master index of all articles
-│   ├── _architecture.md       # System overview
-│   ├── _patterns.md           # Recurring patterns
-│   ├── _meta.yaml             # Last compiled commit, timestamps
-│   │
-│   ├── modules/               # One article per logical module
-│   │   ├── auth.md
-│   │   ├── database.md
-│   │   └── api.md
-│   │
-│   ├── concepts/              # Cross-cutting concerns
-│   │   ├── data-flow.md
-│   │   └── error-handling.md
-│   │
-│   ├── decisions/             # Why things are the way they are
-│   │   └── why-postgres.md
-│   │
-│   ├── learnings/             # Bugs fixed, patterns discovered
-│   │   └── auth-token-bug.md
-│   │
-│   └── queries/               # Past Q&A, filed back in
-│       └── how-caching-works.md
-│
-├── another-project/
-│   └── ...
+your-project/
+└── llm-docs/
+    ├── _index.md              # Master index of all articles
+    ├── _architecture.md       # System overview
+    ├── _patterns.md           # Recurring patterns
+    ├── _meta.yaml             # Last compiled commit, timestamps
+    │
+    ├── modules/               # One article per logical module
+    │   ├── auth.md
+    │   ├── database.md
+    │   └── api.md
+    │
+    ├── concepts/              # Cross-cutting concerns
+    │   ├── data-flow.md
+    │   └── error-handling.md
+    │
+    ├── decisions/             # Why things are the way they are
+    │   └── why-postgres.md
+    │
+    ├── learnings/             # Bugs fixed, patterns discovered
+    │   └── auth-token-bug.md
+    │
+    └── queries/               # Past Q&A, filed back in
+        └── how-caching-works.md
 ```
 
 ### The Session Lifecycle
@@ -164,7 +161,6 @@ The `source_files` field is what makes `cw status` work — when those files cha
 cw init                  # Scaffold wiki for current repo
 cw status                # Show changed files and stale articles
 cw path                  # Print wiki path for current repo
-cw projects              # List all wikis
 cw index                 # Rebuild _index.md from article frontmatter
 cw meta update           # Record current commit as "compiled"
 
@@ -204,11 +200,11 @@ With QMD as an MCP server, your agent can search the wiki programmatically durin
 - **CodeWiki** = what the code *is* (compiled understanding)
 - **EchoVault** = what *happened* while working on it (decisions, bugs, patterns)
 
-Both write into the same `~/.codewiki/<project>/` directory, so memories and code knowledge live side by side.
+Both write into the same `llm-docs/` directory, so memories and code knowledge live side by side.
 
 ### Obsidian
 
-Open `~/.codewiki/` as an Obsidian vault. All wiki articles use `[[backlinks]]` natively, so you get a connected knowledge graph of your codebases out of the box. No plugins required.
+Open your project's `llm-docs/` folder as an Obsidian vault. All wiki articles use `[[backlinks]]` natively, so you get a connected knowledge graph out of the box. No plugins required.
 
 ## Architecture
 
@@ -230,12 +226,13 @@ Open `~/.codewiki/` as an Obsidian vault. All wiki articles use `[[backlinks]]` 
      └─────┬─────┘  └─────┬──────┘
            │               │
      ┌─────▼───────────────▼──────┐
-     │    ~/.codewiki/<project>/  │
+     │    <project>/llm-docs/    │
      │                            │
      │  Markdown files            │
+     │  Committable to git        │
+     │  Version-controllable      │
      │  Viewable in Obsidian      │
      │  Searchable by QMD         │
-     │  Version-controllable      │
      └────────────────────────────┘
 ```
 
@@ -243,7 +240,7 @@ Open `~/.codewiki/` as an Obsidian vault. All wiki articles use `[[backlinks]]` 
 
 - **The CLI is not smart.** It handles git diffs, file scaffolding, and metadata. Your AI agent does all the understanding and writing.
 - **Plain markdown.** No databases, no proprietary formats. Just `.md` files with YAML frontmatter.
-- **Central location.** All wikis live at `~/.codewiki/`. One Obsidian vault for all projects. Survives repo deletion.
+- **Project-local.** Wiki lives at `<project>/llm-docs/`. Committable to git. Clone a repo, get the wiki. No external state.
 - **Session-boundary updates.** Wiki updates happen at session start and end — not continuously. Cost-contained, natural rhythm.
 
 ## Why Not Just RAG?

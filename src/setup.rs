@@ -14,7 +14,7 @@ const CODEX_AGENTS_SECTION: &str = r#"
 
 ## CodeWiki — Codebase Knowledge
 
-You have a compiled wiki of this codebase at `~/.codewiki/`. Use it.
+You have a compiled wiki of this codebase at `./llm-docs/`. Use it.
 
 ### Session start — MANDATORY
 
@@ -26,7 +26,7 @@ cw status
 
 If the wiki is stale or uncompiled, update it:
 - Read changed source files
-- Update the corresponding wiki articles in `~/.codewiki/<project>/`
+- Update the corresponding wiki articles in `./llm-docs/`
 - Run `cw index` then `cw meta update`
 
 If no wiki exists, run `cw init` and compile from scratch.
@@ -35,15 +35,15 @@ If no wiki exists, run `cw init` and compile from scratch.
 
 When you need to understand how a module works, read the wiki article first:
 ```bash
-cat ~/.codewiki/<project>/modules/<name>.md
+cat llm-docs/modules/<name>.md
 ```
 
 ### Session end — MANDATORY
 
 Before finishing any task that involved code changes:
 
-1. If you fixed a bug, create `~/.codewiki/<project>/learnings/<slug>.md`
-2. If you made a design decision, create `~/.codewiki/<project>/decisions/<slug>.md`
+1. If you fixed a bug, create `llm-docs/learnings/<slug>.md`
+2. If you made a design decision, create `llm-docs/decisions/<slug>.md`
 3. Update any wiki articles affected by your code changes
 4. Run `cw index` then `cw meta update`
 
@@ -143,15 +143,15 @@ pub fn setup_codex() -> Result<()> {
 // ---------------------------------------------------------------------------
 
 pub fn setup_qmd() -> Result<()> {
-    let wiki_home = config::wiki_home()?;
+    let repo_path = std::env::current_dir()?;
+    let wiki_path = config::wiki_path(&repo_path)?;
 
-    if !wiki_home.exists() {
-        println!("No wikis found at {}.", wiki_home.display());
-        println!("Run `cw init` in a repo first.");
+    if !wiki_path.exists() {
+        println!("No wiki found at {}.", wiki_path.display());
+        println!("Run `cw init` first.");
         return Ok(());
     }
 
-    // Check if qmd is available
     let qmd_check = std::process::Command::new("qmd")
         .arg("--help")
         .output();
@@ -162,18 +162,20 @@ pub fn setup_qmd() -> Result<()> {
         return Ok(());
     }
 
-    // Add collection
+    let project = config::project_name(&repo_path)?;
+    let collection_name = format!("codewiki-{}", project);
+
     let output = std::process::Command::new("qmd")
-        .args(["collection", "add", &wiki_home.to_string_lossy(), "--name", "codewiki"])
+        .args(["collection", "add", &wiki_path.to_string_lossy(), "--name", &collection_name])
         .output()
         .context("Failed to run qmd collection add")?;
 
     if output.status.success() {
-        println!("Added codewiki collection to QMD: {}", wiki_home.display());
+        println!("Added {} collection to QMD: {}", collection_name, wiki_path.display());
     } else {
         let stderr = String::from_utf8_lossy(&output.stderr);
         if stderr.contains("already exists") {
-            println!("QMD collection 'codewiki' already exists.");
+            println!("QMD collection '{}' already exists.", collection_name);
         } else {
             println!("QMD collection add output: {}", String::from_utf8_lossy(&output.stdout));
             if !stderr.is_empty() {
@@ -182,7 +184,6 @@ pub fn setup_qmd() -> Result<()> {
         }
     }
 
-    // Run embed to index
     println!("Indexing wiki articles...");
     let embed = std::process::Command::new("qmd")
         .arg("embed")
@@ -197,7 +198,7 @@ pub fn setup_qmd() -> Result<()> {
 
     println!();
     println!("You can now search your wiki:");
-    println!("  qmd query \"how does auth work\" -c codewiki");
+    println!("  qmd query \"how does auth work\" -c {}", collection_name);
 
     Ok(())
 }

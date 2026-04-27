@@ -39,7 +39,7 @@ logical groupings (e.g. `main/models.py` + `main/admin.py` = data layer, `psa_sa
 
 For each module, launch a background Agent with this prompt:
 
-> Read every file in [module files list]. Write a wiki article at ~/.codewiki/<project>/modules/<name>.md.
+> Read every file in [module files list]. Write a wiki article at llm-docs/modules/<name>.md.
 > 
 > The article MUST include:
 > - YAML frontmatter with title, type: module, source_files (list every file you read), and tags
@@ -67,7 +67,7 @@ After module agents complete, launch agents for:
 
 Launch a background Agent to verify the wiki:
 
-> Read every article in ~/.codewiki/<project>/. For each article:
+> Read every article in llm-docs/. For each article:
 > 1. Check that every file listed in source_files actually exists in the repo
 > 2. Spot-check 3 function names and line numbers against the actual source
 > 3. Check that no major source file is missing from all articles

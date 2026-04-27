@@ -25,8 +25,6 @@ enum Commands {
     },
     /// Rebuild _index.md from article frontmatter
     Index,
-    /// List all wiki projects
-    Projects,
     /// Print wiki path for current repo
     Path,
     /// Set up codewiki for an agent or tool
@@ -74,7 +72,6 @@ fn main() -> anyhow::Result<()> {
             MetaAction::Update => cmd_meta_update(),
         },
         Commands::Index => cmd_index(),
-        Commands::Projects => cmd_projects(),
         Commands::Path => cmd_path(),
         Commands::Setup { target } => match target {
             SetupTarget::ClaudeCode => setup::setup_claude_code(),
@@ -277,41 +274,6 @@ fn cmd_index() -> anyhow::Result<()> {
     std::fs::write(&index_path, index)?;
     println!("Index updated: {} articles", entries.len());
 
-    Ok(())
-}
-
-fn cmd_projects() -> anyhow::Result<()> {
-    let home = config::wiki_home()?;
-    if !home.exists() {
-        println!("No wikis found. Run `cw init` in a repo.");
-        return Ok(());
-    }
-
-    let mut found = false;
-    let mut entries: Vec<_> = std::fs::read_dir(&home)?
-        .filter_map(|e| e.ok())
-        .filter(|e| e.path().is_dir())
-        .collect();
-    entries.sort_by_key(|e| e.file_name());
-
-    for entry in entries {
-        let path = entry.path();
-        let meta_path = path.join("_meta.yaml");
-        if meta_path.exists() {
-            if let Ok(m) = meta::WikiMeta::load(&path) {
-                found = true;
-                let status = match m.last_compiled_commit {
-                    Some(ref c) => format!("compiled ({})", &c[..7.min(c.len())]),
-                    None => "not compiled".to_string(),
-                };
-                println!("  {} - {} [{}]", m.project, m.repo_path, status);
-            }
-        }
-    }
-
-    if !found {
-        println!("No wikis found. Run `cw init` in a repo.");
-    }
     Ok(())
 }
 

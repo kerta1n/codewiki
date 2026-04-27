@@ -2,12 +2,6 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 
-/// Base directory for all wikis: ~/.codewiki/
-pub fn wiki_home() -> Result<PathBuf> {
-    let home = dirs::home_dir().context("Could not determine home directory")?;
-    Ok(home.join(".codewiki"))
-}
-
 /// Derive project name from git remote origin URL, falling back to directory name.
 pub fn project_name(repo_path: &Path) -> Result<String> {
     let output = std::process::Command::new("git")
@@ -34,8 +28,7 @@ pub fn project_name(repo_path: &Path) -> Result<String> {
         .context("Could not determine project name from directory")
 }
 
-/// Full path to this project's wiki: ~/.codewiki/<project>/
+/// Full path to this project's wiki: <repo>/llm-docs/
 pub fn wiki_path(repo_path: &Path) -> Result<PathBuf> {
-    let name = project_name(repo_path)?;
-    Ok(wiki_home()?.join(name))
+    Ok(repo_path.join("llm-docs"))
 }
