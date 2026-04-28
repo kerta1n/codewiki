@@ -1,13 +1,12 @@
 ---
 name: session
 description: Maintain the codewiki for this repo
-disable-model-invocation: true
 ---
 
 # CodeWiki Session
 
 ## When to trigger
-At the start of any coding session in a git repository.
+If the user wants to map out the wiki, or if the user runs `/codewiki`.
 
 ## Session Start
 
