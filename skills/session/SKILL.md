@@ -1,6 +1,7 @@
 ---
-name: codewiki-session
-description: Maintain a living wiki of the current codebase. Run at session start to check wiki freshness, compile if needed, and update stale articles.
+name: session
+description: Maintain the codewiki for this repo
+disable-model-invocation: true
 ---
 
 # CodeWiki Session

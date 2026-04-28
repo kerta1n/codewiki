@@ -1,0 +1,9 @@
+{
+  "name": "codewiki",
+  "description": "Maintain a living wiki of the current codebase",
+  "version": "0.0.2",
+  "author": {
+    "name": "kerta1n"
+  },
+  "repository": "https://github.com/kerta1n/codewiki"
+}

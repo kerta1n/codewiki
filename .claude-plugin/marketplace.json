@@ -1,0 +1,13 @@
+{
+  "name": "codewiki",
+  "owner": {
+    "name": "kerta1n"
+  },
+  "plugins": [
+    {
+      "name": "codewiki",
+      "source": ".",
+      "description": "Maintain a living wiki of the current codebase"
+    }
+  ]
+}

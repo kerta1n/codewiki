@@ -5,10 +5,36 @@ use anyhow::{Context, Result};
 use crate::config;
 
 // ---------------------------------------------------------------------------
-// Skill content (embedded)
+// Embedded content
 // ---------------------------------------------------------------------------
 
-const SKILL_MD: &str = include_str!("../skills/codewiki-session.md");
+const SKILL_MD: &str = include_str!("../skills/session/SKILL.md");
+
+const PLUGIN_JSON: &str = r#"{
+  "name": "codewiki",
+  "description": "Maintain a living wiki of the current codebase",
+  "version": "0.0.2",
+  "author": {
+    "name": "kerta1n"
+  },
+  "repository": "https://github.com/kerta1n/codewiki"
+}
+"#;
+
+const MARKETPLACE_JSON: &str = r#"{
+  "name": "codewiki-local",
+  "owner": {
+    "name": "local"
+  },
+  "plugins": [
+    {
+      "name": "codewiki",
+      "source": "./codewiki",
+      "description": "Maintain a living wiki of the current codebase"
+    }
+  ]
+}
+"#;
 
 const CODEX_AGENTS_SECTION: &str = r#"
 
@@ -78,6 +104,10 @@ fn claude_home() -> PathBuf {
         .join(".claude")
 }
 
+fn claude_plugins_local() -> PathBuf {
+    claude_home().join("plugins").join("local")
+}
+
 fn codex_home() -> PathBuf {
     dirs::home_dir()
         .unwrap_or_else(|| PathBuf::from("."))
@@ -89,24 +119,42 @@ fn codex_home() -> PathBuf {
 // ---------------------------------------------------------------------------
 
 pub fn setup_claude_code() -> Result<()> {
-    let home = claude_home();
-    let skill_dir = home.join("skills").join("codewiki");
+    let local = claude_plugins_local();
+    let marketplace_dir = local.join(".claude-plugin");
+    let plugin_dir = local.join("codewiki");
+    let plugin_manifest_dir = plugin_dir.join(".claude-plugin");
+    let skill_dir = plugin_dir.join("skills").join("session");
     let skill_path = skill_dir.join("SKILL.md");
 
-    if skill_path.exists() {
-        println!("Skill already installed at {}", skill_path.display());
-        println!("Updating...");
-    }
+    let is_update = skill_path.exists();
 
+    std::fs::create_dir_all(&marketplace_dir)
+        .with_context(|| format!("Failed to create {}", marketplace_dir.display()))?;
+    std::fs::create_dir_all(&plugin_manifest_dir)
+        .with_context(|| format!("Failed to create {}", plugin_manifest_dir.display()))?;
     std::fs::create_dir_all(&skill_dir)
         .with_context(|| format!("Failed to create {}", skill_dir.display()))?;
+
+    std::fs::write(marketplace_dir.join("marketplace.json"), MARKETPLACE_JSON)
+        .with_context(|| "Failed to write marketplace.json")?;
+    std::fs::write(plugin_manifest_dir.join("plugin.json"), PLUGIN_JSON)
+        .with_context(|| "Failed to write plugin.json")?;
     std::fs::write(&skill_path, SKILL_MD)
         .with_context(|| format!("Failed to write {}", skill_path.display()))?;
 
-    println!("Installed codewiki skill to {}", skill_path.display());
-    println!();
-    println!("Claude Code will now use the codewiki skill to maintain");
-    println!("your codebase wiki at session start and end.");
+    if is_update {
+        println!("Updated codewiki plugin at {}", plugin_dir.display());
+        println!();
+        println!("Run /reload-plugins in Claude Code to pick up changes.");
+    } else {
+        println!("Installed codewiki plugin to {}", plugin_dir.display());
+        println!();
+        println!("To activate in Claude Code, run:");
+        println!("  /plugin marketplace add {}", local.display());
+        println!("  /plugin install codewiki@codewiki-local");
+        println!();
+        println!("Then invoke with: /codewiki:session");
+    }
 
     Ok(())
 }
@@ -208,10 +256,13 @@ pub fn setup_qmd() -> Result<()> {
 // ---------------------------------------------------------------------------
 
 pub fn uninstall_claude_code() -> Result<()> {
-    let skill_dir = claude_home().join("skills").join("codewiki");
-    if skill_dir.exists() {
-        std::fs::remove_dir_all(&skill_dir)?;
-        println!("Removed codewiki skill from Claude Code.");
+    let local = claude_plugins_local();
+    if local.exists() {
+        std::fs::remove_dir_all(&local)?;
+        println!("Removed codewiki plugin.");
+        println!();
+        println!("Also run in Claude Code:");
+        println!("  /plugin uninstall codewiki@codewiki-local");
     } else {
         println!("Nothing to remove.");
     }
@@ -222,7 +273,6 @@ pub fn uninstall_codex() -> Result<()> {
     let agents_path = codex_home().join("AGENTS.md");
     if let Ok(content) = std::fs::read_to_string(&agents_path) {
         if content.contains("## CodeWiki") {
-            // Remove the CodeWiki section
             let cleaned = remove_section(&content, "## CodeWiki");
             std::fs::write(&agents_path, cleaned.trim().to_string() + "\n")?;
             println!("Removed codewiki from Codex AGENTS.md.");

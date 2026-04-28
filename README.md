@@ -62,8 +62,12 @@ cw init
 # 2. Set up your AI agent
 cw setup claude-code   # or: cw setup codex
 
-# 3. Start a Claude Code session — the skill triggers automatically
-#    Claude reads your codebase and compiles the wiki
+# 3. Activate in Claude Code (one-time, after cw setup claude-code prints instructions):
+#   /plugin marketplace add <path shown by setup>
+#   /plugin install codewiki@codewiki-local
+
+# 4. Invoke the skill when needed
+#   /codewiki:session
 
 # 4. Open in Obsidian
 #    Point Obsidian at your-project/llm-docs/ as a vault
@@ -176,7 +180,14 @@ cw uninstall codex       # Remove from Codex
 
 ### Claude Code
 
-`cw setup claude-code` installs a skill at `~/.claude/skills/codewiki/`. The skill tells Claude Code when and how to compile, query, and update the wiki. It triggers automatically at session start.
+`cw setup claude-code` installs a plugin to `~/.claude/plugins/local/codewiki/` and prints the two `/plugin` commands needed to activate it. The skill is manual-only — invoke it with `/codewiki:session` when you want to compile, update, or query the wiki.
+
+Alternatively, install directly from GitHub (no binary needed for the plugin itself):
+
+```
+/plugin marketplace add kerta1n/codewiki
+/plugin install codewiki@codewiki
+```
 
 ### Codex
 
